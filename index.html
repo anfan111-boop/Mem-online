@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Meme Generator | СДЕЛАЙ МЕМ ОНЛАЙН</title>
+    <style>
+        :root {
+            --bg-color: #07080f;
+            --surface-color: rgba(26, 27, 37, 0.96);
+            --surface-dark: #0b0c14;
+            --border-color: rgba(255, 255, 255, 0.12);
+            --neon-cyan: #17e7f7;
+            --accent-pink: #ff005d;
+            --text-color: #ffffff;
+            --muted-color: #abaebb;
+            --shadow-cyan: 0 0 26px rgba(23, 231, 247, 0.26);
+            --shadow-pink: 0 0 22px rgba(255, 0, 93, 0.24);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top center, rgba(23, 231, 247, 0.1), transparent 28%),
+                linear-gradient(180deg, #05060d 0%, #090a13 100%);
+            color: var(--text-color);
+            font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+            padding: 28px 18px 54px;
+        }
+
+        .page {
+            width: min(1420px, 100%);
+            margin: 0 auto;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 26px;
+        }
+
+        .hero h1 {
+            margin: 0 0 10px;
+            font-size: clamp(2.8rem, 6vw, 5.8rem);
+            line-height: 0.96;
+            text-transform: uppercase;
+            text-shadow: 0 0 24px rgba(23, 231, 247, 0.84);
+        }
+
+        .hero p {
+            margin: 0;
+            color: #a6a2a7;
+            font-size: clamp(0.95rem, 1.8vw, 1.3rem);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .instruction-box,
+        .editor-panel {
+            background: var(--surface-color);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+        }
+
+        .instruction-box {
+            max-width: 1080px;
+            padding: 30px 38px 34px;
+            border-left: 5px solid var(--neon-cyan);
+            margin: 0 auto 26px;
+        }
+
+        .instruction-box h2,
+        .section-title {
+            margin: 0 0 18px;
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            line-height: 1.05;
+        }
+
+        .instruction-box h2 {
+            font-size: clamp(1.8rem, 2.35vw, 2.35rem);
+            margin-bottom: 22px;
+        }
+
+        .section-title {
+            font-size: clamp(1rem, 1.8vw, 1.45rem);
+            text-align: center;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            margin-bottom: 16px;
+            font-size: clamp(1.02rem, 1.35vw, 1.18rem);
+            line-height: 1.5;
+        }
+
+        .step-num {
+            width: 46px;
+            height: 46px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent-pink);
+            color: #07080f;
+            border-radius: 50%;
+            font-weight: 900;
+            box-shadow: var(--shadow-pink);
+            font-size: 1rem;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        .filter-section,
+        .upload-row,
+        .prompt-row,
+        .actions,
+        .preset-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .cat-btn,
+        .prompt-btn,
+        .action-btn,
+        .file-label {
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            color: var(--text-color);
+            background: #2a2c39;
+            padding: 13px 22px;
+            font-weight: 800;
+            font-size: 0.96rem;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .cat-btn:hover,
+        .prompt-btn:hover,
+        .action-btn:hover,
+        .file-label:hover {
+            transform: translateY(-2px);
+            border-color: rgba(23, 231, 247, 0.62);
+        }
+
+        .cat-btn.active {
+            color: #031117;
+            background: var(--neon-cyan);
+            border-color: var(--neon-cyan);
+            box-shadow: var(--shadow-cyan);
+        }
+
+        .file-label.primary,
+        .action-btn.primary {
+            background: var(--accent-pink);
+            border-color: var(--accent-pink);
+            box-shadow: var(--shadow-pink);
+        }
+
+        .gallery-grid {
+            width: min(1320px, 90%);
+            margin: 0 auto 28px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .card {
+            background: #1c1f2a;
+            padding: 8px;
+            border-radius: 20px;
+            border: 1px solid #323543;
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover,
+        .card.active {
+            transform: translateY(-4px);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.34);
+        }
+
+        .card img {
+            display: block;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 14px;
+            background: #101119;
+        }
+
+        .card-title {
+            padding: 8px 4px 2px;
+            font-size: 0.86rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .editor-panel {
+            width: min(860px, 82%);
+            margin: 0 auto;
+            padding: 18px;
+            display: grid;
+            gap: 14px;
+        }
+
+        .prompt-btn {
+            padding: 8px 12px;
+            font-size: 0.82rem;
+        }
+
+        .style-row {
+            display: flex;
+            gap: 18px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .preset-block {
+            display: grid;
+            gap: 8px;
+            justify-items: center;
+        }
+
+        .preset-title {
+            color: #c9c2bf;
+            font-size: 0.82rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .preset-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 999px;
+            border: 2px solid rgba(255, 255, 255, 0.22);
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .preset-btn:hover,
+        .preset-btn.active {
+            transform: scale(1.08);
+            border-color: #ffffff;
+        }
+
+        .color-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            color: #c9c2bf;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+
+        input[type="color"] {
+            width: 50px;
+            height: 42px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: transparent;
+            padding: 4px;
+            cursor: pointer;
+        }
+
+        .text-fields {
+            display: grid;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: #090a12;
+            color: #fff;
+            font-size: clamp(0.92rem, 1.45vw, 1.2rem);
+            font-weight: 700;
+            text-align: center;
+            padding: 12px 16px;
+            outline: none;
+        }
+
+        input[type="text"]::placeholder {
+            color: #7f8089;
+            text-transform: uppercase;
+            font-weight: 800;
+        }
+
+        .canvas-wrap {
+            background: var(--surface-dark);
+            border-radius: 18px;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        canvas {
+            display: block;
+            width: min(100%, 460px);
+            max-height: 380px;
+            margin: 0 auto;
+            background: #050505;
+            border-radius: 14px;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        label {
+            display: grid;
+            gap: 6px;
+            font-weight: 700;
+            color: #e3e5ef;
+            font-size: 0.82rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        .status {
+            text-align: center;
+            color: var(--muted-color);
+            font-size: 0.82rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 1180px) {
+            .gallery-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 880px) {
+            .gallery-grid,
+            .settings-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .editor-panel {
+                width: min(760px, 90%);
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 18px 12px 38px;
+            }
+
+            .instruction-box,
+            .editor-panel {
+                width: 100%;
+                border-radius: 24px;
+                padding: 18px 16px;
+            }
+
+            .gallery-grid,
+            .settings-grid {
+                width: 100%;
+                grid-template-columns: 1fr;
+            }
+
+            .cat-btn,
+            .prompt-btn,
+            .action-btn,
+            .file-label {
+                width: 100%;
+                justify-content: center;
+                text-align: center;
+            }
+
+            canvas {
+                max-height: 320px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <section class="hero">
+            <h1>СДЕЛАЙ МЕМ ОНЛАЙН</h1>
+            <p>РВИ ТРЕНДЫ. ДЕЛАЙ КОНТЕНТ. БУДЬ СМЕШНЫМ.</p>
+        </section>
+
+        <section class="instruction-box">
+            <h2>🔥 ТВОЙ ПУТЬ К ВИРУСНОМУ МЕМУ:</h2>
+            <div class="step-item"><div class="step-num">1</div><div>Выбери мощный шаблон из галереи или закинь свою фотку.</div></div>
+            <div class="step-item"><div class="step-num">2</div><div>Вбей панчлайн в текстовые поля (настрой цвет, если хочешь выпендриться).</div></div>
+            <div class="step-item"><div class="step-num">3</div><div>Не знаешь что писать? Кликай на наши готовые фразы.</div></div>
+            <div class="step-item"><div class="step-num">4</div><div>Жми на огромную кнопку внизу и забирай шедевр.</div></div>
+        </section>
+
+        <section class="controls">
+            <div class="filter-section" id="filterButtons"></div>
+            <div class="upload-row">
+                <label class="file-label primary" for="baseImageInput">⚡ ЗАГРУЗИТЬ СВОЁ</label>
+                <input type="file" id="baseImageInput" class="hidden" accept="image/*">
+            </div>
+        </section>
+
+        <section class="gallery-grid" id="grid"></section>
+
+        <section class="editor-panel">
+            <h2 class="section-title">НЕТ ИДЕЙ? ВОРУЙ НАШИ ФРАЗЫ:</h2>
+            <div class="prompt-row" id="promptRow"></div>
+
+            <div class="style-row">
+                <div class="color-group">
+                    <span>Цвет текста:</span>
+                    <input type="color" id="textColor" value="#ffffff">
+                </div>
+                <div class="color-group">
+                    <span>Обводка:</span>
+                    <input type="color" id="strokeColor" value="#000000">
+                </div>
+            </div>
+
+            <div class="preset-row">
+                <div class="preset-block">
+                    <div class="preset-title">Текст</div>
+                    <div class="preset-row" id="textPresetRow"></div>
+                </div>
+                <div class="preset-block">
+                    <div class="preset-title">Обводка</div>
+                    <div class="preset-row" id="strokePresetRow"></div>
+                </div>
+            </div>
+
+            <div class="text-fields">
+                <input type="text" id="topText" placeholder="ВЕРХНЯЯ НАДПИСЬ...">
+                <input type="text" id="bottomText" placeholder="НИЖНЯЯ НАДПИСЬ...">
+            </div>
+
+            <div class="canvas-wrap">
+                <canvas id="memeCanvas" width="1200" height="1200"></canvas>
+            </div>
+
+            <div class="settings-grid">
+                <label for="fontSize">Размер текста
+                    <input type="range" id="fontSize" min="22" max="66" value="38">
+                </label>
+                <label for="strokeWidth">Толщина обводки
+                    <input type="range" id="strokeWidth" min="0" max="10" value="4">
+                </label>
+            </div>
+
+            <div class="actions">
+                <button class="action-btn primary" id="downloadBtn" type="button">Скачать мем</button>
+                <button class="action-btn" id="resetTextBtn" type="button">Очистить надписи</button>
+            </div>
+
+            <div class="status" id="status">Выбери шаблон или загрузи свою картинку.</div>
+        </section>
+    </div>
+
+    <script>
+        const categories = [
+            { key: "life", icon: "🎭", label: "ЖИЗА" },
+            { key: "work", icon: "💼", label: "РАБОТА" },
+            { key: "cats", icon: "🐈", label: "КОТИКИ" },
+            { key: "love", icon: "❤️", label: "ОТНОШЕНИЯ" }
+        ];
+
+        const templates = {
+            life: ["жиза1.png", "жиза2.png", "жиза3.png", "жиза4.png", "жиза5.png", "жиза6.png", "жиза7.png", "жиза8.png", "жиза10.png"],
+            work: ["работа1.png", "работа2.png", "работа3.png", "работа4.png", "работа8.png", "работа9.png", "работа11.png"],
+            cats: ["котики1.png", "котики2.png", "котики5.png", "котики6.png"],
+            love: ["отношения1.png", "отношения2.png", "отношения3.png", "отношения6.png", "отношения7.png"]
+        };
+
+        const prompts = {
+            life: [
+                { label: "Я в 3 ночи", top: "Я В 3 НОЧИ", bottom: "КОГДА ВСПОМНИЛ КРИНЖ 2017 ГОДА" },
+                { label: "Зарплата", top: "ЗАРПЛАТА ПРИШЛА", bottom: "А Я УЖЕ ВСЁ РАСПИСАЛ" },
+                { label: "Про шапку", top: "Я ВРОДЕ НА 5 МИНУТ", bottom: "НО УЖЕ ЖИВУ В ЭТОЙ СИТУАЦИИ" },
+                { label: "Фронталка", top: "ФРОНТАЛКА ВКЛЮЧИЛАСЬ", bottom: "И Я УВИДЕЛ ПРАВДУ" },
+                { label: "Выходные", top: "МОИ ВЫХОДНЫЕ", bottom: "ПРОЛЕТЕЛИ БЫСТРЕЕ СООБЩЕНИЯ В ЧАТЕ" }
+            ],
+            work: [
+                { label: "Зарплата", top: "ЗАРПЛАТА ПРИШЛА", bottom: "И СРАЗУ УШЛА ПО СВОИМ ДЕЛАМ" },
+                { label: "Созвон", top: "СОЗВОН НА 15 МИНУТ", bottom: "КОТОРЫЙ ЖИВЁТ УЖЕ ЧАС" },
+                { label: "Дедлайн", top: "Я И ДЕДЛАЙН", bottom: "ОПЯТЬ ВСТРЕТИЛИСЬ НОЧЬЮ" },
+                { label: "Excel", top: "EXCEL НЕ РУГАЕТСЯ", bottom: "И Я УЖЕ ЧУВСТВУЮ СЕБЯ ГЕНИЕМ" },
+                { label: "Пятница", top: "ПЯТНИЦА 18:01", bottom: "ИЗ МЕНЯ УЖЕ ВЫШЕЛ СОТРУДНИК" }
+            ],
+            cats: [
+                { label: "Миска", top: "КОТ ЧЕРЕЗ 4 МИНУТЫ ПОСЛЕ ЕДЫ", bottom: "БУДТО ЕГО НЕ КОРМИЛИ ГОД" },
+                { label: "Фронталка", top: "ФРОНТАЛКА ВКЛЮЧИЛАСЬ", bottom: "И КОТ СТАЛ ГЛАВНЫМ ГЕРОЕМ" },
+                { label: "Ночной тыгыдык", top: "2:57 НОЧИ", bottom: "КОТУ ПОРА НАЧАТЬ ТУР ПО КВАРТИРЕ" },
+                { label: "Взгляд", top: "ЭТОТ ВЗГЛЯД", bottom: "КОГДА ТЫ СЕЛ НА ЕГО МЕСТО" },
+                { label: "Начальник", top: "КОГДА КОТ СМОТРИТ", bottom: "БУДТО ТЫ ОПЯТЬ ВСЁ ИСПОРТИЛ" }
+            ],
+            love: [
+                { label: "Переписка", top: "Я:", bottom: "«ВСЁ НОРМАЛЬНО»" },
+                { label: "Ревность", top: "КОГДА ОН ЛАЙКНУЛ", bottom: "НЕ ТУ ИСТОРИЮ" },
+                { label: "Совместно", top: "МЫ СКАЗАЛИ «БЫСТРО СОБЕРЁМСЯ»", bottom: "И УЖЕ ОПАЗДЫВАЕМ 40 МИНУТ" },
+                { label: "Романтика", top: "ОЖИДАНИЕ: РОМАНТИЧНЫЙ ВЕЧЕР", bottom: "РЕАЛЬНОСТЬ: ВЫБИРАЕМ, ЧТО ПОЕСТЬ" },
+                { label: "Обиделась", top: "Я НЕ ОБИДЕЛАСЬ", bottom: "ПРОСТО ЗАПОМНИЛА ВСЁ" }
+            ]
+        };
+
+        const state = {
+            currentCategory: "life",
+            currentTemplateName: "",
+            baseImage: null
+        };
+
+        const canvas = document.getElementById("memeCanvas");
+        const ctx = canvas.getContext("2d");
+        const grid = document.getElementById("grid");
+        const filterButtons = document.getElementById("filterButtons");
+        const promptRow = document.getElementById("promptRow");
+        const status = document.getElementById("status");
+        const topTextInput = document.getElementById("topText");
+        const bottomTextInput = document.getElementById("bottomText");
+        const textColorInput = document.getElementById("textColor");
+        const strokeColorInput = document.getElementById("strokeColor");
+        const textPresetRow = document.getElementById("textPresetRow");
+        const strokePresetRow = document.getElementById("strokePresetRow");
+        const fontSizeInput = document.getElementById("fontSize");
+        const strokeWidthInput = document.getElementById("strokeWidth");
+        const baseImageInput = document.getElementById("baseImageInput");
+        const textPresetColors = ["#ffffff", "#ffe066", "#00f3ff", "#ff7ad9", "#9bff9b"];
+        const strokePresetColors = ["#000000", "#1f2937", "#5b21b6", "#7f1d1d", "#0f766e"];
+
+        function assetPath(fileName) {
+            return encodeURI(fileName);
+        }
+
+        function setStatus(message) {
+            status.textContent = message;
+        }
+
+        function createImage(src) {
+            return new Promise((resolve, reject) => {
+                const image = new Image();
+                image.onload = () => resolve(image);
+                image.onerror = () => reject(new Error("Не удалось загрузить изображение"));
+                image.src = src;
+            });
+        }
+
+        function readFileAsDataUrl(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error("Не удалось прочитать файл"));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function buildFilters() {
+            filterButtons.innerHTML = "";
+            categories.forEach((category) => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = `cat-btn${category.key === state.currentCategory ? " active" : ""}`;
+                button.dataset.filter = category.key;
+                button.textContent = `${category.icon} ${category.label}`;
+                button.addEventListener("click", () => {
+                    state.currentCategory = category.key;
+                    document.querySelectorAll(".cat-btn").forEach((item) => {
+                        item.classList.toggle("active", item.dataset.filter === category.key);
+                    });
+                    renderGallery();
+                    renderPrompts();
+                });
+                filterButtons.appendChild(button);
+            });
+        }
+
+        function renderGallery() {
+            grid.innerHTML = "";
+            const items = templates[state.currentCategory] || [];
+
+            items.forEach((fileName) => {
+                const card = document.createElement("button");
+                card.type = "button";
+                card.className = `card${state.currentTemplateName === fileName ? " active" : ""}`;
+                card.innerHTML = `
+                    <img src="${assetPath(fileName)}" alt="${fileName}">
+                    <div class="card-title">${fileName.replace(".png", "")}</div>
+                `;
+                card.addEventListener("click", async () => {
+                    try {
+                        state.baseImage = await createImage(assetPath(fileName));
+                        state.currentTemplateName = fileName;
+                        setStatus(`Шаблон выбран: ${fileName}`);
+                        renderGallery();
+                        drawCanvas();
+                    } catch (error) {
+                        setStatus(`Ошибка: ${error.message}`);
+                    }
+                });
+                grid.appendChild(card);
+            });
+        }
+
+        function renderPrompts() {
+            promptRow.innerHTML = "";
+            (prompts[state.currentCategory] || []).forEach((item) => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "prompt-btn";
+                button.textContent = item.label;
+                button.addEventListener("click", () => {
+                    topTextInput.value = item.top;
+                    bottomTextInput.value = item.bottom;
+                    drawCanvas();
+                });
+                promptRow.appendChild(button);
+            });
+        }
+
+        function renderColorPresets(container, colors, input) {
+            container.innerHTML = "";
+            colors.forEach((color) => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = `preset-btn${input.value.toLowerCase() === color.toLowerCase() ? " active" : ""}`;
+                button.style.background = color;
+                button.title = color;
+                button.addEventListener("click", () => {
+                    input.value = color;
+                    renderColorPresets(container, colors, input);
+                    drawCanvas();
+                });
+                container.appendChild(button);
+            });
+        }
+
+        function syncPresets() {
+            renderColorPresets(textPresetRow, textPresetColors, textColorInput);
+            renderColorPresets(strokePresetRow, strokePresetColors, strokeColorInput);
+        }
+
+        function wrapText(text, maxWidth) {
+            const words = text.trim().split(/\s+/);
+            const lines = [];
+            let line = "";
+
+            words.forEach((word) => {
+                const testLine = line ? `${line} ${word}` : word;
+                if (ctx.measureText(testLine).width > maxWidth && line) {
+                    lines.push(line);
+                    line = word;
+                } else {
+                    line = testLine;
+                }
+            });
+
+            if (line) {
+                lines.push(line);
+            }
+
+            return lines;
+        }
+
+        function drawTextBlock(text, yStart, fromBottom = false) {
+            const cleanText = text.trim().toUpperCase();
+            if (!cleanText) {
+                return;
+            }
+
+            const fontSize = Number(fontSizeInput.value);
+            const strokeWidth = Number(strokeWidthInput.value);
+            const lineHeight = fontSize * 1.1;
+            const maxWidth = canvas.width * 0.84;
+
+            ctx.font = `900 ${fontSize}px Impact, Arial Black, sans-serif`;
+            ctx.textAlign = "center";
+            ctx.lineJoin = "round";
+            ctx.fillStyle = textColorInput.value;
+            ctx.strokeStyle = strokeColorInput.value;
+            ctx.lineWidth = Math.max(strokeWidth, 2);
+            ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 3;
+
+            const lines = wrapText(cleanText, maxWidth);
+            const totalHeight = lineHeight * lines.length;
+            let y = fromBottom ? yStart - totalHeight + fontSize : yStart;
+            const blockTop = y - fontSize * 0.9;
+            const blockHeight = totalHeight + fontSize * 0.55;
+
+            ctx.save();
+            ctx.shadowColor = "transparent";
+            ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
+            ctx.beginPath();
+            const rectWidth = maxWidth + 36;
+            const rectX = (canvas.width - rectWidth) / 2;
+            const rectY = Math.max(12, blockTop);
+            const rectRadius = 18;
+            ctx.moveTo(rectX + rectRadius, rectY);
+            ctx.lineTo(rectX + rectWidth - rectRadius, rectY);
+            ctx.quadraticCurveTo(rectX + rectWidth, rectY, rectX + rectWidth, rectY + rectRadius);
+            ctx.lineTo(rectX + rectWidth, rectY + blockHeight - rectRadius);
+            ctx.quadraticCurveTo(rectX + rectWidth, rectY + blockHeight, rectX + rectWidth - rectRadius, rectY + blockHeight);
+            ctx.lineTo(rectX + rectRadius, rectY + blockHeight);
+            ctx.quadraticCurveTo(rectX, rectY + blockHeight, rectX, rectY + blockHeight - rectRadius);
+            ctx.lineTo(rectX, rectY + rectRadius);
+            ctx.quadraticCurveTo(rectX, rectY, rectX + rectRadius, rectY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            ctx.font = `900 ${fontSize}px Impact, Arial Black, sans-serif`;
+            ctx.textAlign = "center";
+            ctx.lineJoin = "round";
+            ctx.fillStyle = textColorInput.value;
+            ctx.strokeStyle = strokeColorInput.value;
+            ctx.lineWidth = Math.max(strokeWidth, 2);
+            ctx.shadowColor = "rgba(0, 0, 0, 0.72)";
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 3;
+
+            lines.forEach((line) => {
+                ctx.strokeText(line, canvas.width / 2, y);
+                ctx.fillText(line, canvas.width / 2, y);
+                y += lineHeight;
+            });
+
+            ctx.shadowColor = "transparent";
+        }
+
+        function drawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#050505";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (!state.baseImage) {
+                ctx.fillStyle = "#7f8089";
+                ctx.textAlign = "center";
+                ctx.font = "700 40px Segoe UI";
+                ctx.fillText("Выбери шаблон или загрузи картинку", canvas.width / 2, canvas.height / 2);
+                return;
+            }
+
+            const image = state.baseImage;
+            const scale = Math.min(canvas.width / image.width, canvas.height / image.height);
+            const drawWidth = image.width * scale;
+            const drawHeight = image.height * scale;
+            const x = (canvas.width - drawWidth) / 2;
+            const y = (canvas.height - drawHeight) / 2;
+
+            ctx.drawImage(image, x, y, drawWidth, drawHeight);
+            drawTextBlock(topTextInput.value, 68, false);
+            drawTextBlock(bottomTextInput.value, canvas.height - 42, true);
+        }
+
+        async function loadDefaultTemplate() {
+            const firstFile = templates[state.currentCategory][0];
+            if (!firstFile) {
+                drawCanvas();
+                return;
+            }
+
+            try {
+                state.baseImage = await createImage(assetPath(firstFile));
+                state.currentTemplateName = firstFile;
+                renderGallery();
+                drawCanvas();
+                setStatus(`Шаблон выбран: ${firstFile}`);
+            } catch (error) {
+                setStatus(`Ошибка загрузки шаблона: ${error.message}`);
+                drawCanvas();
+            }
+        }
+
+        [topTextInput, bottomTextInput, fontSizeInput, strokeWidthInput]
+            .forEach((input) => input.addEventListener("input", drawCanvas));
+
+        textColorInput.addEventListener("input", () => {
+            syncPresets();
+            drawCanvas();
+        });
+
+        strokeColorInput.addEventListener("input", () => {
+            syncPresets();
+            drawCanvas();
+        });
+
+        baseImageInput.addEventListener("change", async (event) => {
+            const [file] = event.target.files;
+            if (!file) {
+                return;
+            }
+
+            try {
+                const dataUrl = await readFileAsDataUrl(file);
+                state.baseImage = await createImage(dataUrl);
+                state.currentTemplateName = file.name;
+                setStatus(`Загружена своя картинка: ${file.name}`);
+                renderGallery();
+                drawCanvas();
+            } catch (error) {
+                setStatus(`Ошибка загрузки своей картинки: ${error.message}`);
+            }
+        });
+
+        document.getElementById("downloadBtn").addEventListener("click", () => {
+            const link = document.createElement("a");
+            link.download = "meme_ready.png";
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        });
+
+        document.getElementById("resetTextBtn").addEventListener("click", () => {
+            topTextInput.value = "";
+            bottomTextInput.value = "";
+            drawCanvas();
+            setStatus("Надписи очищены.");
+        });
+
+        buildFilters();
+        renderPrompts();
+        syncPresets();
+        renderGallery();
+        loadDefaultTemplate();
+    </script>
+</body>
+</html>
